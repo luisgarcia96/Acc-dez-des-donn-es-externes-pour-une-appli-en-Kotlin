@@ -1,16 +1,23 @@
 package com.aura.ui.login
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.aura.data.remote.api.ApiService
+import com.aura.data.repository.client
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
+  
+  private val apiService = ApiService(
+    client = client
+  )
 
-  // Holds the latest text for each field.
-  val usernameFlow = MutableStateFlow("")
-  val passwordFlow = MutableStateFlow("")
+  //-------------- State Flow ------------------//
+  val username = MutableStateFlow("")
+  val password = MutableStateFlow("")
 
-  // Instead of using combine(...), we do a single Boolean Flow
   val isFormValid = MutableStateFlow(false)
 
   val loginResult: MutableStateFlow<Boolean?> = MutableStateFlow(null)
@@ -18,33 +25,46 @@ class LoginViewModel : ViewModel() {
   val errorMessage: MutableStateFlow<String?> = MutableStateFlow(null)
 
   fun updateUsername(newUsername: String) {
-    usernameFlow.value = newUsername
+    username.value = newUsername
     checkFormValidity()
   }
 
   fun updatePassword(newPassword: String) {
-    passwordFlow.value = newPassword
+    password.value = newPassword
     checkFormValidity()
   }
 
   // Called every time the user updates username or password
   private fun checkFormValidity() {
     isFormValid.value =
-      usernameFlow.value.isNotEmpty() &&
-              passwordFlow.value.isNotEmpty()
+      username.value.isNotEmpty() &&
+              password.value.isNotEmpty()
   }
 
   fun login(username: String, password: String) {
-    isLoading.value = true
-    errorMessage.value = null
+    viewModelScope.launch {
+      try {
+        // Show loading indicator
+        isLoading.value = true
+        errorMessage.value = null
 
-    if (username.isEmpty() || password.isEmpty()) {
-      errorMessage.value = "Username and password cannot be empty"
-      isLoading.value = false
-      return
+        // Make the API call
+        val response = apiService.login(username, password)
+
+        if (response.granted) {
+          loginResult.value = true
+        } else {
+          loginResult.value = false
+          errorMessage.value = "Login failed"
+        }
+      } catch (e: Exception) {
+        Log.e("LoginViewModel", "Login failed", e)
+        errorMessage.value = "Login failed: ${e.message}"
+        loginResult.value = false
+      } finally {
+        // Hide loading indicator
+        isLoading.value = false
+      }
     }
-
-    loginResult.value = true
-    isLoading.value = false
   }
 }

@@ -1,5 +1,6 @@
 package com.aura.data.remote.api
 
+import com.aura.data.remote.model.Account
 import com.aura.data.remote.model.LoginRequest
 import com.aura.data.remote.model.LoginResponse
 import io.ktor.client.*
@@ -22,5 +23,10 @@ class ApiService(private val client: HttpClient) {
     }.body()
   }
 
-  // Define other API methods here
+  /**
+   * Get the user's accounts
+   */
+  suspend fun getAccountsById(id: String): List<Account> {
+    return client.get("$baseUrl/accounts/$id").body()
+  }
 }

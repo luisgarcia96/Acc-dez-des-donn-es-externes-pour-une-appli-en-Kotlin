@@ -55,7 +55,7 @@ class LoginViewModel : ViewModel() {
           loginResult.value = true
         } else {
           loginResult.value = false
-          errorMessage.value = "Login failed"
+          errorMessage.value = "Wrong Credentials"
         }
       } catch (e: Exception) {
         Log.e("LoginViewModel", "Login failed", e)

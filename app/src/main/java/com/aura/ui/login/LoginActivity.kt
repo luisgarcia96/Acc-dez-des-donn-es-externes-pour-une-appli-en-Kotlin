@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.aura.databinding.ActivityLoginBinding
 import com.aura.ui.home.HomeActivity
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
@@ -45,6 +46,7 @@ class LoginActivity : AppCompatActivity() {
       viewModel.loginResult.collect { success ->
         if (success == true) {
           val intent = Intent(this@LoginActivity, HomeActivity::class.java)
+          intent.putExtra("userId", binding.identifier.text.toString())
           startActivity(intent)
           finish()
         }
@@ -62,13 +64,16 @@ class LoginActivity : AppCompatActivity() {
 
     // Observe form validity to enable or disable the login button
     lifecycleScope.launch {
-      viewModel.isFormValid.collect { valid ->
-        binding.login.isEnabled = valid
-      }
+      viewModel.isFormValid
+        .combine(viewModel.isLoading) { valid, loading ->
+          valid && !loading
+        }.collect { enableButton ->
+          binding.loginButton.isEnabled = enableButton
+        }
     }
 
     //---------------------- UI ELEMENTS ---------------------- //
-    val loginButton = binding.login
+    val loginButton = binding.loginButton
     val usernameInput = binding.identifier
     val passwordInput = binding.password
 

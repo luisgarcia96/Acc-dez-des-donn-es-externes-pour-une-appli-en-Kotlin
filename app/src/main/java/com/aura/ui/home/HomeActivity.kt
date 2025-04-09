@@ -75,7 +75,6 @@ class HomeActivity : AppCompatActivity()
     }
 
     // Collect and observe the loading state
-// Collect and observe the loading state
     lifecycleScope.launch {
       homeViewModel.isLoading.collect { loading ->
         binding.loading.visibility = if (loading) View.VISIBLE else View.GONE

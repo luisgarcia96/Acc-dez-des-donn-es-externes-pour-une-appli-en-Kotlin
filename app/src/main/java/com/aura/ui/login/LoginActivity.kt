@@ -31,7 +31,7 @@ class LoginActivity : AppCompatActivity() {
     setContentView(binding.root)
 
     // Initialize view model
-    viewModel = ViewModelProvider(this).get(LoginViewModel::class.java)
+    viewModel = ViewModelProvider(this)[LoginViewModel::class.java]
 
     //---------------------- COLLECT FLOW ---------------------- //
     // Observe loading state

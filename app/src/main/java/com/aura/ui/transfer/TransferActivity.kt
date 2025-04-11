@@ -2,7 +2,9 @@ package com.aura.ui.transfer
 
 import android.app.Activity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.ViewModelProvider
@@ -25,8 +27,7 @@ class TransferActivity : AppCompatActivity()
    */
   private lateinit var transferViewModel: TransferViewModel
 
-  override fun onCreate(savedInstanceState: Bundle?)
-  {
+  override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
     // Set up the binding
@@ -50,6 +51,13 @@ class TransferActivity : AppCompatActivity()
       transferViewModel.updateAmount(text.toString())
     }
 
+    //Collect and observe the isLoading flow
+    lifecycleScope.launch {
+      transferViewModel.isLoading.collect { isLoading ->
+        loading.visibility = if (isLoading) View.VISIBLE else View.GONE
+      }
+    }
+
     // Collect and observe the isTransferButtonEnabled flow
     lifecycleScope.launch {
       transferViewModel.isTransferButtonEnabled.collect { isEnabled ->
@@ -57,12 +65,34 @@ class TransferActivity : AppCompatActivity()
       }
     }
 
-    transferButton.setOnClickListener {
-      loading.visibility = View.VISIBLE
+    // Collect and observe errorMessage flow
+    lifecycleScope.launch {
+      transferViewModel.errorMessage.collect { errorMessage ->
+        if (errorMessage != null) {
+          Toast.makeText(this@TransferActivity, errorMessage, Toast.LENGTH_SHORT).show()
+          transferViewModel.clearError()  // Clear after displaying the toast.
+        }
+      }
+    }
 
-      setResult(Activity.RESULT_OK)
-      finish()
+
+
+    transferButton.setOnClickListener {
+      Log.d("TransferActivity", intent.getStringExtra("userId").toString())
+      transferViewModel.transfer(
+        senderId = intent.getStringExtra("userId") ?: "",
+        recipientId = recipient.text.toString(),
+        amount = amount.text.toString().toDouble()
+      )
+
+      lifecycleScope.launch {
+        transferViewModel.transferResult.collect { success ->
+          if (success == true) {
+            setResult(Activity.RESULT_OK)
+            finish()
+          }
+        }
+      }
     }
   }
-
 }

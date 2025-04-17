@@ -16,7 +16,10 @@ class TransferViewModel : ViewModel() {
 
   //-------------- State Flow ------------------//
   private val _recipient = MutableStateFlow("")
+  val recipient: MutableStateFlow<String> = _recipient
+
   private val _amount = MutableStateFlow("")
+  val amount: MutableStateFlow<String> = _amount
 
   private val _isTransferButtonEnabled = MutableStateFlow(false)
   val isTransferButtonEnabled: MutableStateFlow<Boolean> = _isTransferButtonEnabled
